@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # --- App Configuration ---
-st.set_page_config(page_title="Credentials Manager", layout="centered")
+st.set_page_config(page_title="Server Credentials Manager", layout="centered")
 
 # --- Theme & Styles ---
 st.markdown(
@@ -40,68 +40,85 @@ st.markdown(
 # --- Data Storage ---
 if "credentials" not in st.session_state:
     st.session_state.credentials = []
+if "page" not in st.session_state:
+    st.session_state.page = "menu"  # menu, add, view
 
 # --- Functions ---
-def add_credential(service, username, password):
+def add_credential(domain, ip, username, password):
     st.session_state.credentials.append(
-        {"Service": service, "Username": username, "Password": password}
+        {"Domain": domain, "IP": ip, "User": username, "Password": password}
     )
 
 def remove_credential(index):
     if 0 <= index < len(st.session_state.credentials):
         st.session_state.credentials.pop(index)
 
-def edit_credential(index, service, username, password):
+def edit_credential(index, domain, ip, username, password):
     if 0 <= index < len(st.session_state.credentials):
         st.session_state.credentials[index] = {
-            "Service": service,
-            "Username": username,
+            "Domain": domain,
+            "IP": ip,
+            "User": username,
             "Password": password,
         }
 
-# --- UI ---
-st.title("🔐 Credentials Manager")
-st.write("Manage your credentials with ease — add, edit, or remove them below.")
+# --- Main Menu ---
+if st.session_state.page == "menu":
+    st.title("🌐 Server Credentials Manager")
+    st.write("Choose an option below to manage your server credentials:")
 
-# --- Add Credential Form ---
-with st.form("add_form", clear_on_submit=True):
-    st.subheader("➕ Add New Credential")
-    service = st.text_input("Service Name")
-    username = st.text_input("Username/Email")
-    password = st.text_input("Password", type="password")
-    submitted = st.form_submit_button("Add Credential")
-    if submitted:
-        if service and username and password:
-            add_credential(service, username, password)
-            st.success(f"Credential for **{service}** added!")
-        else:
-            st.error("Please fill out all fields before adding.")
+    if st.button("➕ Add New Credential"):
+        st.session_state.page = "add"
 
-# --- Display Credentials ---
-if st.session_state.credentials:
-    st.subheader("📋 Saved Credentials")
-    df = pd.DataFrame(st.session_state.credentials)
-    st.dataframe(df, use_container_width=True)
+    if st.button("📋 View/Edit/Remove Credentials"):
+        st.session_state.page = "view"
 
-    selected = st.selectbox(
-        "Select a credential to Edit/Remove",
-        options=range(len(df)),
-        format_func=lambda i: df.iloc[i]["Service"]
-    )
+# --- Add Credential Page ---
+elif st.session_state.page == "add":
+    st.title("➕ Add New Server Credential")
+    with st.form("add_form", clear_on_submit=True):
+        domain = st.text_input("Domain Name")
+        ip = st.text_input("IP Address")
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        submitted = st.form_submit_button("Add Credential")
+        if submitted:
+            if domain and ip and username and password:
+                add_credential(domain, ip, username, password)
+                st.success(f"Credential for **{domain}** added!")
+            else:
+                st.error("Please fill out all fields before adding.")
 
-    # --- Edit Section ---
-    st.markdown("---")
-    st.subheader("✏️ Edit Selected Credential")
-    svc = st.text_input("Edit Service", value=df.iloc[selected]["Service"])
-    usr = st.text_input("Edit Username", value=df.iloc[selected]["Username"])
-    pwd = st.text_input("Edit Password", value=df.iloc[selected]["Password"])
-    if st.button("Save Changes"):
-        edit_credential(selected, svc, usr, pwd)
-        st.success("Credential updated!")
+    if st.button("⬅️ Back to Menu"):
+        st.session_state.page = "menu"
 
-    # --- Remove Button ---
-    if st.button("Remove Selected Credential"):
-        remove_credential(selected)
-        st.warning("Credential removed!")
-else:
-    st.info("No credentials saved yet.")
+# --- View/Edit/Remove Page ---
+elif st.session_state.page == "view":
+    st.title("📋 Saved Credentials")
+    if st.session_state.credentials:
+        df = pd.DataFrame(st.session_state.credentials)
+        st.dataframe(df, use_container_width=True)
+
+        selected = st.selectbox(
+            "Select a credential to Edit/Remove",
+            options=range(len(df)),
+            format_func=lambda i: f"{df.iloc[i]['Domain']} ({df.iloc[i]['IP']})"
+        )
+
+        st.subheader("✏️ Edit Selected Credential")
+        dom = st.text_input("Edit Domain", value=df.iloc[selected]["Domain"])
+        ip_edit = st.text_input("Edit IP", value=df.iloc[selected]["IP"])
+        usr = st.text_input("Edit Username", value=df.iloc[selected]["User"])
+        pwd = st.text_input("Edit Password", value=df.iloc[selected]["Password"])
+        if st.button("Save Changes"):
+            edit_credential(selected, dom, ip_edit, usr, pwd)
+            st.success("Credential updated!")
+
+        if st.button("Remove Selected Credential"):
+            remove_credential(selected)
+            st.warning("Credential removed!")
+    else:
+        st.info("No credentials saved yet.")
+
+    if st.button("⬅️ Back to Menu"):
+        st.session_state.page = "menu"
