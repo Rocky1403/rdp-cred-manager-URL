@@ -4,58 +4,40 @@ import pandas as pd
 # --- App Configuration ---
 st.set_page_config(page_title="Server Credentials Manager", layout="centered")
 
-# --- Default Theme ---
-if "theme" not in st.session_state:
-    st.session_state.theme = "light"  # light or dark
+# --- Custom Styles with Texture Background ---
+st.markdown(
+    """
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
-# --- Custom Styles ---
-def apply_styles():
-    if st.session_state.theme == "dark":
-        bg_color = "#1e1e1e"
-        text_color = "#ffffff"
-        card_color = "#2c2c2c"
-        button_color = "#5c5c5c"
-        hover_color = "#777777"
-    else:
-        bg_color = "#f7f7f7"
-        text_color = "#333333"
-        card_color = "#ffffff"
-        button_color = "#4CAF50"
-        hover_color = "#45a049"
-
-    st.markdown(
-        f"""
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-        <style>
-        body, .main {{
-            font-family: 'Poppins', sans-serif;
-            background-color: {bg_color};
-            color: {text_color};
-        }}
-        .stDataFrame {{
-            background-color: {card_color};
-            border-radius: 10px;
-            padding: 10px;
-        }}
-        h1, h2, h3, h4 {{
-            color: {text_color};
-        }}
-        .stButton>button {{
-            background-color: {button_color};
-            color: white;
-            border-radius: 8px;
-            padding: 8px 18px;
-            font-weight: bold;
-        }}
-        .stButton>button:hover {{
-            background-color: {hover_color};
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-apply_styles()
+    body, .main {
+        font-family: 'Poppins', sans-serif;
+        background: url('https://www.transparenttextures.com/patterns/cubes.png'); /* Texture */
+        background-color: #f7f7f7;  /* fallback color */
+        color: #333333;
+    }
+    .stDataFrame {
+        background-color: #ffffff;
+        border-radius: 12px;
+        padding: 10px;
+    }
+    h1, h2, h3, h4 {
+        color: #222222;
+    }
+    .stButton>button {
+        background-color: #4CAF50;
+        color: white;
+        border-radius: 8px;
+        padding: 8px 18px;
+        font-weight: bold;
+    }
+    .stButton>button:hover {
+        background-color: #45a049;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # --- Data Storage ---
 if "credentials" not in st.session_state:
@@ -81,13 +63,6 @@ def edit_credential(index, domain, ip, username, password):
             "User": username,
             "Password": password,
         }
-
-# --- Theme Toggle Popup ---
-with st.expander("🌗 Theme Settings", expanded=False):
-    selected_theme = st.radio("Choose Theme", ["Light", "Dark"])
-    if selected_theme.lower() != st.session_state.theme:
-        st.session_state.theme = selected_theme.lower()
-        st.experimental_rerun()
 
 # --- Main Menu ---
 if st.session_state.page == "menu":
